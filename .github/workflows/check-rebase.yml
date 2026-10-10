@@ -1,0 +1,22 @@
+name: Check rebase
+
+# Exercise 4: the PR from ex4/feature must be rebased onto main
+# (0 commits behind, no merge commits, all feature commits + yours kept).
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  rebase:
+    if: startsWith(github.head_ref, 'ex4/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - name: Is the branch rebased?
+        run: bash .github/course/check_rebase.sh "origin/${{ github.base_ref }}" HEAD 10

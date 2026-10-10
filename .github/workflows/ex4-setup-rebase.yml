@@ -1,0 +1,28 @@
+name: "Exercise 4 · Create rebase scenario"
+
+# Run manually: Actions tab -> "Exercise 4 · Create rebase scenario" -> Run workflow.
+# Creates branch ex4/feature: 10 commits behind main, 9 commits ahead.
+# Re-running resets the exercise.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: course-setup
+  cancel-in-progress: false
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Build ex4/feature (10 behind, 9 ahead)
+        run: bash .github/course/setup_ex4.sh
+        env:
+          BEHIND: "10"
+          AHEAD: "9"
+          BASE_BRANCH: ${{ github.event.repository.default_branch }}
