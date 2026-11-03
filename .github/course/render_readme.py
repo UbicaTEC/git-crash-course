@@ -103,10 +103,15 @@ def render():
     stage = FINISHED if current is None else EXERCISES[current - 1][2]
     header = (PARTS / "header.md").read_text(encoding="utf-8").rstrip()
     header = header.replace("<!-- PROGRESS -->", progress_table(current))
-    header = header.replace("assets/hero.svg", f"assets/hero.svg?step={current}")  # bust GitHub's image cache
+    header = header.replace("assets/hero.svg", f"assets/{hero_name(current)}")
     body = (PARTS / stage).read_text(encoding="utf-8").strip()
     footer = (PARTS / "footer.md").read_text(encoding="utf-8").strip()
     return current, f"{GENERATED_NOTE}\n{header}\n\n---\n\n{body}\n\n---\n\n{footer}\n"
+
+
+def hero_name(current):
+    # One file per state: GitHub caches images by URL, so a rewritten file would show stale.
+    return f"hero-{'done' if current is None else current}.svg"
 
 
 def render_hero(current):
@@ -130,11 +135,12 @@ def render_hero(current):
 
 def main(argv):
     current, text = render()
-    hero = ROOT / "assets" / "hero.svg"
-    hero_text = render_hero(current)
-    hero_old = hero.read_text(encoding="utf-8") if hero.is_file() else ""
-    if hero_old != hero_text and "--check" not in argv:
-        hero.write_text(hero_text, encoding="utf-8", newline="\n")
+    if "--check" not in argv:
+        for state in [*range(1, len(EXERCISES) + 1), None]:
+            hero = ROOT / "assets" / hero_name(state)
+            hero_text = render_hero(state)
+            if not hero.is_file() or hero.read_text(encoding="utf-8") != hero_text:
+                hero.write_text(hero_text, encoding="utf-8", newline="\n")
     readme = ROOT / "README.md"
     old = readme.read_text(encoding="utf-8") if readme.is_file() else ""
     where = "finished" if current is None else f"exercise {current}"
