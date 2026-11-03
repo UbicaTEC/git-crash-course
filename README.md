@@ -16,6 +16,8 @@ finish five exercises, from your very first commit up to resolving merge conflic
 
 > **This page shows one exercise at a time.** When you finish one, GitHub Actions replaces this
 > page with the next exercise. It takes about 30 seconds, then refresh.
+> It only moves on when the exercise was done correctly. If not, a **Not done yet** box at the
+> top of the exercise tells you what to fix.
 
 ---
 

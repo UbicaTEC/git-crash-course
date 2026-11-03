@@ -52,7 +52,8 @@ The workflow created the branch, but **you** open the PR.
    branch is 0 commits behind, has no merge commits, and kept all 10 commits.
 2. On GitHub click **Compare & pull request** for `ex4/feature` (base `main`) and click
    **Create pull request**.
-3. When the check is green, click **Merge pull request → Confirm merge**, then **Delete branch**.
+3. When the check is green, click **Merge pull request → Confirm merge** (keep **Create a merge
+   commit**, not squash), then **Delete branch**.
 4. Clean your workspace:
 
 ```bash

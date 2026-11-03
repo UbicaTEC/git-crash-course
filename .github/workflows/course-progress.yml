@@ -5,10 +5,12 @@ name: Course progress
 on:
   push:
     branches: [main]
+  delete:  # exercise 2 is done only once its branch is deleted on GitHub
   workflow_dispatch:
 
 permissions:
   contents: write
+  pull-requests: read
 
 concurrency:
   group: course-setup
@@ -27,6 +29,8 @@ jobs:
         with:
           python-version: "3.12"
       - name: Show the next exercise
+        env:
+          GH_TOKEN: ${{ github.token }}  # to read the exercise 5 PR description
         run: |
           python .github/course/render_readme.py
           git add README.md assets/hero-*.svg
@@ -43,7 +47,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          current=$(python -c "import sys; sys.path.insert(0, '.github/course'); import render_readme as r; print(r.current_exercise())")
+          current=$(python -c "import sys; sys.path.insert(0, '.github/course'); import render_readme as r; print(r.current_exercise()[0])")
           echo "Student is on exercise $current"
           # Only when the files don't exist yet, so a student's work is never reset.
           if [[ "$current" == 3 && ! -f exercise-3/hackathon-plan.md ]]; then

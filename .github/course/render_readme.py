@@ -4,13 +4,17 @@
 Usage:
     python .github/course/render_readme.py [--check]
 
-Progress is read from the files on the current branch (normally main):
-  1. exercise-1/hello.md has no "_..._" placeholders left
-  2. exercise-2/favorites.md has no "_?_" cells left (it got there through a merged PR)
-  3. exercise-3/hackathon-plan.md exists and passes `check_tables.py --ex3`
-  4. exercise-4/feature-notes.md contains the "Rebased onto main" line from step 4.1
-  5. exercise-5/mcp-notes.md has no "_your answer_" placeholders left
+Progress is read from main (needs full history). An exercise counts only when done correctly:
+  1. exercise-1/hello.md: every field filled in
+  2. exercise-2/favorites.md: no "_?_" cells, table renders, merged through a PR whose
+     branch was then deleted on GitHub
+  3. exercise-3/hackathon-plan.md: merged through a PR and passes `check_tables.py --ex3`
+  4. exercise-4/feature-notes.md: merged through a PR (merge commit), has the
+     "Rebased onto main" line, and the merged branch was rebased (not behind, no merges)
+  5. exercise-5/mcp-notes.md: merged through a PR, answers filled in, and (in Actions)
+     the PR description mentions UbicaTEC
 
+When an exercise was handed in but is wrong, the README shows why at the top of the stage.
 The current exercise is the first one that isn't done. Re-running an exercise's setup
 workflow resets its files, so the README moves back to that exercise on the next push.
 The course-progress workflow runs the exercise 3 and 4 setup scripts by itself when the
@@ -20,6 +24,7 @@ The page is header.md + a progress table + the current stage + footer.md, all fr
 .github/course/readme/. Edit those files, never README.md directly.
 With --check, exit 1 if README.md is out of date instead of writing it.
 """
+import os
 import re
 import subprocess
 import sys
@@ -46,46 +51,150 @@ def read(rel):
     return path.read_text(encoding="utf-8", errors="replace") if path.is_file() else None
 
 
-def ex1_done():
+def git(*args):
+    result = subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True)
+    return result.stdout.strip() if result.returncode == 0 else ""
+
+
+PR_RE = re.compile(r"^Merge pull request #(\d+) from \S+?/(\S+)$|\(#(\d+)\)$")
+
+
+def merged_prs(path, branch=None):
+    """PRs merged into main since `path` was last set up, newest first:
+    (sha, number, branch or None for a squash merge). Without `branch`, only PRs that changed `path`."""
+    # A setup workflow (re)created the file: PRs before that don't count.
+    since = git("log", "-1", "--format=%H", r"--author=github-actions\[bot\]", "HEAD", "--", path)
+    args = ["log", "--first-parent", "--format=%H%x09%s", f"{since}..HEAD" if since else "HEAD"]
+    prs = []
+    for line in git(*args, *([] if branch else ["--", path])).splitlines():
+        sha, subject = line.split("\t", 1)
+        m = PR_RE.search(subject)
+        if m and (not branch or m.group(2) == branch or
+                  (m.group(2) is None and git("diff", "--name-only", f"{sha}^", sha, "--", path))):
+            prs.append((sha, m.group(1) or m.group(3), m.group(2)))
+    return prs
+
+
+def table_errors(path, *flags):
+    """First problem `check_tables.py` reports for `path`, or None if its tables are fine."""
+    result = subprocess.run([sys.executable, str(ROOT / ".github/course/check_tables.py"), *flags, path],
+                            cwd=ROOT, capture_output=True, text=True)
+    if result.returncode == 0:
+        return None
+    errs = [l.split("::", 2)[-1] for l in result.stdout.splitlines() if l.startswith("::error")]
+    return errs[0] if errs else "its tables don't render"
+
+
+# Each check returns None when the exercise is done, "" when the student hasn't handed it in
+# yet (nothing to report), or a message saying what is wrong.
+
+def ex1_check():
     text = read("exercise-1/hello.md")
-    return text is not None and not re.search(r"_(your name here|your username here|one sentence)_", text)
+    if text is None:
+        return "`exercise-1/hello.md` is missing. Restore it from the template."
+    left = re.findall(r"_(your name here|your username here|one sentence)_", text)
+    if len(left) == 3:
+        return ""
+    if left:
+        return f"`exercise-1/hello.md` still has the placeholder `_{left[0]}_`."
+    for field in ("Name", "GitHub username", "Why I want to learn Git"):
+        if not re.search(rf"\*\*{field}:\*\*[ \t]*\S", text):
+            return f"`exercise-1/hello.md`: the **{field}** line is empty."
+    return None
 
 
-def ex2_done():
-    text = read("exercise-2/favorites.md")
-    return text is not None and "_?_" not in text
+def ex2_check():
+    path = "exercise-2/favorites.md"
+    text = read(path)
+    if text is None:
+        return f"`{path}` is missing. Restore it from the template."
+    prs = merged_prs(path)
+    if text.count("_?_") == 3 and not prs:
+        return ""
+    if "_?_" in text:
+        return f"`{path}` on `main` still has `_?_` cells. Fill in every row (on a branch, through a PR)."
+    problem = table_errors(path)
+    if problem:
+        return f"The table in `{path}` doesn't render: {problem}"
+    if not prs:
+        return (f"`{path}` was changed directly on `main`. This exercise must go through a branch "
+                "and a merged Pull Request: make a small change on a new branch and merge it with a PR.")
+    branch = prs[0][2]
+    if branch and git("ls-remote", "--heads", "origin", branch):
+        return f"The PR is merged, but the branch `{branch}` still exists on GitHub. Delete it (step 2.5)."
+    return None
 
 
-def ex3_done():
-    if read("exercise-3/hackathon-plan.md") is None:
-        return False
-    result = subprocess.run(
-        [sys.executable, str(ROOT / ".github/course/check_tables.py"), "--ex3",
-         "exercise-3/hackathon-plan.md"],
-        cwd=ROOT, capture_output=True, text=True)
-    return result.returncode == 0
+def ex3_check():
+    path = "exercise-3/hackathon-plan.md"
+    if read(path) is None:
+        return ""  # the setup hasn't run yet
+    if not merged_prs(path, "ex3/your-changes"):
+        return ""
+    problem = table_errors(path, "--ex3")
+    if problem:
+        return f"Your PR is merged, but `{path}` on `main` is not right: {problem}"
+    return None
 
 
-def ex4_done():
-    text = read("exercise-4/feature-notes.md")
+def ex4_check():
+    path = "exercise-4/feature-notes.md"
+    text = read(path)
+    if text is None:
+        return ""  # the setup hasn't run yet
+    prs = merged_prs(path)
+    if not prs:
+        return ""
     # Windows PowerShell's `echo >>` appends UTF-16, so drop the NUL bytes before matching.
-    return text is not None and "Rebased onto main" in text.replace("\0", "")
+    if "Rebased onto main" not in text.replace("\0", ""):
+        return f"Your PR is merged, but `{path}` has no `Rebased onto main` line (step 4.1)."
+    sha, _, _ = prs[0]
+    head = git("rev-parse", "--verify", "-q", f"{sha}^2")
+    if not head:
+        return "Merge the PR with **Create a merge commit** (not squash), so the rebase can be checked."
+    last_main = git("log", "-1", "--format=%H", "--grep=^main: update [0-9]* of [0-9]*$", "HEAD")
+    if last_main and subprocess.run(["git", "merge-base", "--is-ancestor", last_main, head], cwd=ROOT).returncode:
+        return "The merged branch was not rebased onto `main` (it was still behind). Re-run the Exercise 4 workflow and rebase."
+    if last_main and git("rev-list", "--merges", f"{last_main}..{head}"):
+        return "The merged branch has merge commits: you merged `main` into it instead of rebasing. Re-run the Exercise 4 workflow and rebase."
+    return None
 
 
-def ex5_done():
-    text = read("exercise-5/mcp-notes.md")
-    return text is not None and not re.search(r"_(your answer)_", text)
+def ex5_check():
+    path = "exercise-5/mcp-notes.md"
+    text = read(path)
+    if text is None:
+        return f"`{path}` is missing. Restore it from the template."
+    prs = merged_prs(path)
+    if not prs:
+        if "_your answer_" in text:
+            return ""
+        return f"`{path}` was changed directly on `main`. Do it on a branch and merge it with a PR (step 5.2)."
+    if "_your answer_" in text:
+        return f"`{path}` still has `_your answer_` placeholders."
+    if re.search(r":[ \t]*$", text, re.M):
+        return f"`{path}` has an empty answer."
+    # shortcut: the PR description is only checked where the GitHub CLI is logged in (in Actions).
+    repo = os.environ.get("GITHUB_REPOSITORY")
+    if repo and os.environ.get("GH_TOKEN"):
+        body = subprocess.run(["gh", "api", f"repos/{repo}/pulls/{prs[0][1]}", "--jq", ".body // \"\""],
+                              capture_output=True, text=True).stdout
+        if "ubicatec" not in body.lower():
+            return (f"The description of PR #{prs[0][1]} doesn't say what UbicaTEC is. Edit it on GitHub, "
+                    "then go to **Actions → Course progress → Run workflow**.")
+    return None
 
 
-CHECKS = [ex1_done, ex2_done, ex3_done, ex4_done, ex5_done]
+CHECKS = [ex1_check, ex2_check, ex3_check, ex4_check, ex5_check]
 
 
 def current_exercise():
-    """Number of the first exercise that isn't done, or None when all are."""
-    for (number, _, _), done in zip(EXERCISES, CHECKS):
-        if not done():
-            return number
-    return None
+    """(number, problem) of the first exercise that isn't done, or (None, None) when all are."""
+    for (number, _, _), check in zip(EXERCISES, CHECKS):
+        problem = check()
+        if problem is not None:
+            return number, problem
+    return None, None
 
 
 def progress_table(current):
@@ -102,14 +211,16 @@ def progress_table(current):
 
 
 def render():
-    current = current_exercise()
+    current, problem = current_exercise()
     stage = FINISHED if current is None else EXERCISES[current - 1][2]
     header = (PARTS / "header.md").read_text(encoding="utf-8").rstrip()
     header = header.replace("<!-- PROGRESS -->", progress_table(current))
     header = header.replace("assets/hero.svg", f"assets/{hero_name(current)}")
     body = (PARTS / stage).read_text(encoding="utf-8").strip()
+    if problem:
+        body = f"> [!WARNING]\n> **Not done yet:** {problem}\n\n{body}"
     footer = (PARTS / "footer.md").read_text(encoding="utf-8").strip()
-    return current, f"{GENERATED_NOTE}\n{header}\n\n---\n\n{body}\n\n---\n\n{footer}\n"
+    return current, problem, f"{GENERATED_NOTE}\n{header}\n\n---\n\n{body}\n\n---\n\n{footer}\n"
 
 
 def hero_name(current):
@@ -137,7 +248,7 @@ def render_hero(current):
 
 
 def main(argv):
-    current, text = render()
+    current, problem, text = render()
     if "--check" not in argv:
         for state in [*range(1, len(EXERCISES) + 1), None]:
             hero = ROOT / "assets" / hero_name(state)
@@ -147,6 +258,8 @@ def main(argv):
     readme = ROOT / "README.md"
     old = readme.read_text(encoding="utf-8") if readme.is_file() else ""
     where = "finished" if current is None else f"exercise {current}"
+    if problem:
+        print(f"::warning::Exercise {current} is not done yet: {problem}")
     if old == text:
         print(f"README.md is up to date ({where}).")
         return 0
