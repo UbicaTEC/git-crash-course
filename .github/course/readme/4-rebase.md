@@ -72,4 +72,4 @@ git branch -d ex4/feature && git fetch --prune
 | **Check rebase**: "merge commit(s)" | You merged instead of rebasing. Run `git reset --hard origin/ex4/feature`, or re-run the Exercise 4 workflow, and rebase again |
 | `git push` rejected after a rebase | Use `git push --force-with-lease` |
 | Lost in the middle of the rebase | `git rebase --abort`, then start over from 4.1 |
-| Anything else | Re-run the Exercise 4 workflow: it resets everything |
+| Rebase went wrong, or you want to start over | Go to **Actions → Restart exercise 3 or 4 → Run workflow**, pick `4`, tick the confirm box. Then on your computer: `git rebase --abort` (if a rebase is in progress), `git fetch origin`, `git switch ex4/feature`, `git reset --hard origin/ex4/feature`, and start again from 4.1 |

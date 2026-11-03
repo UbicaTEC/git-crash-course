@@ -98,4 +98,4 @@ git branch -d ex3/your-changes && git fetch --prune
 | **Check tables**: "duplicate row(s)" | **Accept Both** copied a line twice. Delete one copy |
 | **Check tables**: "Leftover merge-conflict marker" | Delete every `<<<<<<<`, `=======` and `>>>>>>>` line |
 | Lost in the middle of the merge | `git merge --abort`, then start over from 3.1 |
-| Anything else | Re-run the Exercise 3 workflow: it resets everything |
+| Merge went wrong, or you want to start over | Go to **Actions → Restart exercise 3 or 4 → Run workflow**, pick `3`, tick the confirm box. Then on your computer: `git merge --abort` (if a merge is in progress), `git fetch origin`, `git switch ex3/your-changes`, `git reset --hard origin/ex3/your-changes`, and start again from 3.1 |
