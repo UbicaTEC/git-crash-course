@@ -6,14 +6,13 @@ decide which version wins, so it asks you.
 ### 3.0 Let GitHub Actions create the conflict
 
 1. On GitHub go to **Actions → Exercise 3 · Create merge conflicts → Run workflow → Run workflow**.
-2. When it finishes (green check, about 30 s), open the **Pull requests** tab. There is a new PR,
-   **Exercise 3: update the hackathon plan**, from `ex3/your-changes` into `main`.
+2. When it finishes (green check, about 30 s), the branch `ex3/your-changes` exists on GitHub.
 
 What happened: the workflow created `exercise-3/hackathon-plan.md`, then made **two branches**.
 Your teammate **Alex**'s branch was merged into `main` first. Your branch, `ex3/your-changes`,
-edited the **same 4 places**, so the PR says **This branch has conflicts that must be resolved**.
+edited the **same 4 places**, so merging `main` into it will conflict.
 
-![Alex's branch is merged first; your branch edited the same lines, so its PR has 4 conflicts. Example conflict block and its resolution.](assets/step3-conflict.svg)
+![Alex's branch is merged first; your branch edited the same lines, so it has 4 conflicts. Example conflict block and its resolution.](assets/step3-conflict.svg)
 
 ### 3.1 Resolve the 4 conflicts so the tables render
 
@@ -65,20 +64,19 @@ git commit                                      # accept the default merge messa
 git push
 ```
 
-*(GitHub also has a **Resolve conflicts** button in the PR that you can use as an alternative.
-Try the terminal first: that's what you'll have in real projects.)*
-
 ### 3.2 Merge into `main`
 
-Back in the PR, the conflict warning is gone, and **Check tables** runs automatically after your
-push. When it's green, click **Merge pull request**, then **Delete branch**, and clean your
-workspace like in Exercise 2:
+**Check tables** runs automatically after your push (see the **Actions** tab). When it's green,
+merge the branch into `main` and clean your workspace:
 
 ```bash
-git switch main && git pull && git branch -d ex3/your-changes && git fetch --prune
+git switch main && git pull
+git merge ex3/your-changes
+git push
+git push origin --delete ex3/your-changes && git branch -d ex3/your-changes && git fetch --prune
 ```
 
-✅ **Done when:** the PR is merged with a green **Check tables** check, and the hackathon plan on
+✅ **Done when:** `ex3/your-changes` is merged into `main` and **Check tables** is green, and the hackathon plan on
 `main` renders 4 tables. This page then changes to Exercise 4.
 
 > Want to try again? Re-run the workflow. It resets the file and the branch.
@@ -87,8 +85,7 @@ git switch main && git pull && git branch -d ex3/your-changes && git fetch --pru
 
 | What you see | What to do |
 | --- | --- |
-| Workflow fails with **403** or **not permitted to create pull requests** | **Settings → Actions → General**: select **Read and write permissions** and tick **Allow GitHub Actions to create and approve pull requests**. Then re-run the workflow |
-| The PR shows **no checks** | Normal: checks start after **you** push your resolution |
+| Workflow fails with **403** | **Settings → Actions → General**: select **Read and write permissions**. Then re-run the workflow |
 | **Check tables**: "Row has 2 cell(s) but the header has 3" | A row is missing a cell. Count the `\|` pipes |
 | **Check tables**: "duplicate row(s)" | **Accept Both** copied a line twice. Delete one copy |
 | **Check tables**: "Leftover merge-conflict marker" | Delete every `<<<<<<<`, `=======` and `>>>>>>>` line |

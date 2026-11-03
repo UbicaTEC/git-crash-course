@@ -1,18 +1,17 @@
 #!/usr/bin/env bash
-# Exercise 3 setup: create a Pull Request with 4 merge conflicts in one Markdown file.
+# Exercise 3 setup: push a branch that has 4 merge conflicts with main in one Markdown file.
 #
 #   1. Reset exercise-3/hackathon-plan.md on main to the base version.
 #   2. Branch "ex3/teammate-alex" edits 4 places in the file and is merged into main
 #      (this simulates a teammate who got their PR merged first).
 #   3. Branch "ex3/your-changes" edits the SAME 4 places differently, starting from the
-#      old base, so its PR into main now has 4 conflicts.
+#      old base, so merging main into it gives 4 conflicts.
 #
 # Safe to re-run: it resets the file and force-pushes the exercise branches.
 #
 # Env vars:
 #   BASE_BRANCH  default branch to target (default: main)
 #   REMOTE       git remote name (default: origin)
-#   SKIP_PR=1    don't call the GitHub CLI (used by local verification)
 set -euo pipefail
 
 BASE_BRANCH="${BASE_BRANCH:-main}"
@@ -58,29 +57,4 @@ git merge --no-ff "$TEAMMATE_BRANCH" -m "Merge branch '$TEAMMATE_BRANCH' (Alex's
 git push "$REMOTE" "$BASE_BRANCH"
 git branch -D "$TEAMMATE_BRANCH"
 
-if [ "${SKIP_PR:-0}" = "1" ]; then
-  echo "SKIP_PR=1: not opening a Pull Request."
-  exit 0
-fi
-
-EXISTING="$(gh pr list --head "$YOUR_BRANCH" --base "$BASE_BRANCH" --state open --json number --jq '.[0].number')"
-if [ -n "$EXISTING" ]; then
-  echo "PR #$EXISTING already open; its branch was reset, so it has fresh conflicts."
-else
-  gh pr create \
-    --base "$BASE_BRANCH" \
-    --head "$YOUR_BRANCH" \
-    --title "Exercise 3: update the hackathon plan (resolve the conflicts!)" \
-    --body "$(cat <<'BODY'
-Your teammate **Alex** changed `exercise-3/hackathon-plan.md` and their work was merged into `main` first.
-This branch changed the **same lines**, so this PR has **4 merge conflicts**.
-
-Follow **Exercise 3** in the README:
-
-1. Resolve all 4 conflicts so that **every table still renders**.
-2. Keep the work of **both** people (rows, columns and edits).
-3. Push your fix. The **Check tables** check must turn green.
-4. Merge this PR into `main`.
-BODY
-)"
-fi
+echo "Pushed $YOUR_BRANCH (conflicts with $BASE_BRANCH). No Pull Request is opened."

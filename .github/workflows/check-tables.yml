@@ -1,11 +1,10 @@
 name: Check tables
 
 # Fails if any Markdown table is broken or a merge-conflict marker was left behind.
-# On Exercise 3 PRs it also checks that both teammates' work was kept.
+# On ex3/* branches it also checks that both teammates' work was kept.
 on:
-  pull_request:
   push:
-    branches: [main]
+    branches: [main, "ex3/**"]
 
 permissions:
   contents: read
@@ -20,7 +19,7 @@ jobs:
           python-version: "3.12"
       - name: Validate Markdown tables
         run: |
-          if [[ "${{ github.head_ref }}" == ex3/* ]]; then
+          if [[ "${{ github.ref_name }}" == ex3/* ]]; then
             python .github/course/check_tables.py --ex3
           else
             python .github/course/check_tables.py

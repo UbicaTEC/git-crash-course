@@ -6,11 +6,10 @@
    Choose **your account** as the owner, give it a name, and click **Create repository**.
 2. In **your new repository**, go to **Settings → Actions → General → Workflow permissions** and:
    - select **Read and write permissions**
-   - tick **Allow GitHub Actions to create and approve pull requests**
    - click **Save**
 
-   GitHub Actions uses these permissions to update this page and to create the branches and
-   Pull Requests for exercises 3 and 4.
+   GitHub Actions uses these permissions to update this page and to create the branches
+   for exercises 3 and 4.
 3. Tell Git who you are (only once per computer):
 
    ```bash

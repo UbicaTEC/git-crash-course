@@ -1,7 +1,7 @@
 name: Course progress
 
 # Rewrites README.md so it shows only the exercise the student is on.
-# Runs on every push to main (a commit or a merged PR). Run it manually to refresh.
+# Runs on every push to main. Run it manually to refresh.
 on:
   push:
     branches: [main]

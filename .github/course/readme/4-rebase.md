@@ -44,13 +44,19 @@ to it in the meantime. Never force-push a shared branch like `main`.
 
 ### 4.2 Merge into `main`
 
-1. Open a PR from `ex4/feature` into `main` (`gh pr create --base main --fill`, or use the GitHub UI).
-2. The **Check rebase** check verifies that your branch is 0 commits behind, has no merge commits,
-   and kept all 10 commits. **Don't** click **Update branch** on GitHub: that creates a
-   merge commit, which is exactly what rebase avoids. The check will fail if you do.
-3. When it's green, merge the PR, delete the branch, and clean your workspace.
+1. The **Check rebase** check runs on your push (see the **Actions** tab). It verifies that your
+   branch is 0 commits behind, has no merge commits, and kept all 10 commits.
+2. When it's green, merge into `main` (a fast-forward, since you rebased), delete the branch and
+   clean your workspace:
 
-✅ **Done when:** the PR is merged with a green **Check rebase** check.
+```bash
+git switch main && git pull
+git merge ex4/feature
+git push
+git push origin --delete ex4/feature && git branch -d ex4/feature && git fetch --prune
+```
+
+✅ **Done when:** `ex4/feature` is merged into `main` and **Check rebase** is green.
 
 > Want to try again? Re-run the workflow. It rebuilds `ex4/feature` from scratch.
 
