@@ -42,21 +42,23 @@ to it in the meantime. Never force-push a shared branch like `main`.
 
 > If a rebase ever goes wrong: `git rebase --abort` puts everything back the way it was.
 
-### 4.2 Merge into `main`
+### 4.2 Open a Pull Request and merge it
+
+The workflow created the branch, but **you** open the PR.
 
 1. The **Check rebase** check runs on your push (see the **Actions** tab). It verifies that your
    branch is 0 commits behind, has no merge commits, and kept all 10 commits.
-2. When it's green, merge into `main` (a fast-forward, since you rebased), delete the branch and
-   clean your workspace:
+2. On GitHub click **Compare & pull request** for `ex4/feature` (base `main`) and click
+   **Create pull request**.
+3. When the check is green, click **Merge pull request → Confirm merge**, then **Delete branch**.
+4. Clean your workspace:
 
 ```bash
 git switch main && git pull
-git merge ex4/feature
-git push
-git push origin --delete ex4/feature && git branch -d ex4/feature && git fetch --prune
+git branch -d ex4/feature && git fetch --prune
 ```
 
-✅ **Done when:** `ex4/feature` is merged into `main` and **Check rebase** is green.
+✅ **Done when:** your PR is merged into `main` and **Check rebase** is green.
 
 > Want to try again? Re-run the workflow. It rebuilds `ex4/feature` from scratch.
 

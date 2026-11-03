@@ -6,7 +6,7 @@ decide which version wins, so it asks you.
 ### 3.0 Let GitHub Actions create the conflict
 
 1. On GitHub go to **Actions → Exercise 3 · Create merge conflicts → Run workflow → Run workflow**.
-2. When it finishes (green check, about 30 s), the branch `ex3/your-changes` exists on GitHub.
+2. When it finishes (green check, about 30 s), the branch `ex3/your-changes` exists on GitHub. (No PR is opened: that part is yours.)
 
 What happened: the workflow created `exercise-3/hackathon-plan.md`, then made **two branches**.
 Your teammate **Alex**'s branch was merged into `main` first. Your branch, `ex3/your-changes`,
@@ -64,19 +64,25 @@ git commit                                      # accept the default merge messa
 git push
 ```
 
-### 3.2 Merge into `main`
+### 3.2 Open a Pull Request and merge it
 
-**Check tables** runs automatically after your push (see the **Actions** tab). When it's green,
-merge the branch into `main` and clean your workspace:
+The workflow created the branch, but **you** open the PR. **Check tables** runs automatically
+after your push (see the **Actions** tab).
+
+1. On GitHub click **Compare & pull request** for `ex3/your-changes` (or **Pull requests → New
+   pull request**, base `main`, compare `ex3/your-changes`).
+2. Give it a title, then click **Create pull request**. GitHub must say **"This branch has no
+   conflicts with the base branch"**. If not, go back to 3.1.
+3. When **Check tables** is green, click **Merge pull request → Confirm merge**, then
+   **Delete branch**.
+4. Clean your workspace:
 
 ```bash
 git switch main && git pull
-git merge ex3/your-changes
-git push
-git push origin --delete ex3/your-changes && git branch -d ex3/your-changes && git fetch --prune
+git branch -d ex3/your-changes && git fetch --prune
 ```
 
-✅ **Done when:** `ex3/your-changes` is merged into `main` and **Check tables** is green, and the hackathon plan on
+✅ **Done when:** your PR is merged into `main`, **Check tables** is green, and the hackathon plan on
 `main` renders 4 tables. This page then changes to Exercise 4.
 
 > Want to try again? Re-run the workflow. It resets the file and the branch.

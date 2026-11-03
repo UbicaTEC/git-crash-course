@@ -57,4 +57,4 @@ git merge --no-ff "$TEAMMATE_BRANCH" -m "Merge branch '$TEAMMATE_BRANCH' (Alex's
 git push "$REMOTE" "$BASE_BRANCH"
 git branch -D "$TEAMMATE_BRANCH"
 
-echo "Pushed $YOUR_BRANCH (conflicts with $BASE_BRANCH). No Pull Request is opened."
+echo "Pushed $YOUR_BRANCH (conflicts with $BASE_BRANCH). The student opens the Pull Request."
