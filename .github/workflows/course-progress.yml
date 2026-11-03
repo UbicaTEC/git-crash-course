@@ -28,10 +28,10 @@ jobs:
       - name: Show the next exercise
         run: |
           python .github/course/render_readme.py
-          if git diff --quiet README.md; then
+          if git diff --quiet README.md assets/hero.svg; then
             exit 0
           fi
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Course progress: update README" README.md
+          git commit -m "Course progress: update README" README.md assets/hero.svg
           git push origin "HEAD:${{ github.event.repository.default_branch }}"

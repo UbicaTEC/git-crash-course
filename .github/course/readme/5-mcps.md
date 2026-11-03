@@ -4,6 +4,8 @@ An **MCP server** (Model Context Protocol) gives an AI assistant tools it can ca
 "list branches" or "create an issue". Here you connect the **GitHub MCP server** to Claude Code
 and use it on this repository.
 
+![MCP flow: you ask Claude Code, it calls tools on the GitHub MCP server, which opens a pull request on GitHub](assets/step5-mcp.svg)
+
 ### 5.1 Connect the GitHub MCP server
 
 1. Create a GitHub token: **Settings → Developer settings → Personal access tokens**, with read

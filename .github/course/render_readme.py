@@ -103,13 +103,38 @@ def render():
     stage = FINISHED if current is None else EXERCISES[current - 1][2]
     header = (PARTS / "header.md").read_text(encoding="utf-8").rstrip()
     header = header.replace("<!-- PROGRESS -->", progress_table(current))
+    header = header.replace("assets/hero.svg", f"assets/hero.svg?step={current}")  # bust GitHub's image cache
     body = (PARTS / stage).read_text(encoding="utf-8").strip()
     footer = (PARTS / "footer.md").read_text(encoding="utf-8").strip()
     return current, f"{GENERATED_NOTE}\n{header}\n\n---\n\n{body}\n\n---\n\n{footer}\n"
 
 
+def render_hero(current):
+    """Hero banner for the current exercise: done = own colour, current = gold, later = gray."""
+    colors = ["mu", "green", "blue", "orange", "purple", "red"]  # node 0 is Setup, then exercises 1-5
+    svg = (ROOT / ".github/course/hero.svg.tpl").read_text(encoding="utf-8")
+    cur = len(EXERCISES) + 1 if current is None else current
+    for i, color in enumerate(colors):
+        if i == cur:
+            c, s, r, w, bold = "gold", "goldS", 30, 3, 700
+        elif i < cur:
+            c, s, r, w, bold = color, color + "S", 26, 2, 600
+        else:
+            c, s, r, w, bold = "gray", "grayS", 26, 2, 600
+        for key, val in (("C", f"var(--{c})"), ("S", f"var(--{s})"), ("R", r), ("W", w), ("T", bold)):
+            svg = svg.replace(f"@{key}{i}@", str(val))
+    svg = svg.replace("@PX@", str(110 + 132 * min(cur, 5)))
+    sub = "All done, well done!" if current is None else f"Now: exercise {current}, {EXERCISES[current - 1][1]}"
+    return svg.replace("@SUB@", sub)
+
+
 def main(argv):
     current, text = render()
+    hero = ROOT / "assets" / "hero.svg"
+    hero_text = render_hero(current)
+    hero_old = hero.read_text(encoding="utf-8") if hero.is_file() else ""
+    if hero_old != hero_text and "--check" not in argv:
+        hero.write_text(hero_text, encoding="utf-8", newline="\n")
     readme = ROOT / "README.md"
     old = readme.read_text(encoding="utf-8") if readme.is_file() else ""
     where = "finished" if current is None else f"exercise {current}"
