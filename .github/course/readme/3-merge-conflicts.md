@@ -3,10 +3,12 @@
 A **merge conflict** happens when two branches change the **same lines** of a file. Git can't
 decide which version wins, so it asks you.
 
-### 3.0 Let GitHub Actions create the conflict
+### 3.0 GitHub Actions creates the conflict for you
 
-1. On GitHub go to **Actions → Exercise 3 · Create merge conflicts → Run workflow → Run workflow**.
-2. When it finishes (green check, about 30 s), the branch `ex3/your-changes` exists on GitHub. (No PR is opened: that part is yours.)
+When you finished Exercise 2, the **Course progress** workflow set this exercise up by itself
+(about 1 minute). Check that the branch `ex3/your-changes` exists on GitHub (**Branches**). No PR
+is opened: that part is yours. If the branch isn't there, go to **Actions → Exercise 3 · Create
+merge conflicts → Run workflow**.
 
 What happened: the workflow created `exercise-3/hackathon-plan.md`, then made **two branches**.
 Your teammate **Alex**'s branch was merged into `main` first. Your branch, `ex3/your-changes`,

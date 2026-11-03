@@ -22,6 +22,7 @@ jobs:
         with:
           # Latest main, not the pushed SHA: a setup workflow may have pushed while we waited.
           ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -36,3 +37,17 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "Course progress: update README"
           git push origin "HEAD:${{ github.event.repository.default_branch }}"
+      - name: Set up exercise 3 or 4 when the student reaches it
+        env:
+          BASE_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          current=$(python -c "import sys; sys.path.insert(0, '.github/course'); import render_readme as r; print(r.current_exercise())")
+          echo "Student is on exercise $current"
+          # Only when the files don't exist yet, so a student's work is never reset.
+          if [[ "$current" == 3 && ! -f exercise-3/hackathon-plan.md ]]; then
+            bash .github/course/setup_ex3.sh
+          elif [[ "$current" == 4 && ! -f exercise-4/feature-notes.md ]]; then
+            BEHIND=10 AHEAD=9 bash .github/course/setup_ex4.sh
+          fi

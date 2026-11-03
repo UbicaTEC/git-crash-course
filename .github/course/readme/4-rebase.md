@@ -3,10 +3,11 @@
 `git rebase` takes your commits and **replays them on top of** the latest `main`, as if you'd
 started your branch today. You get a straight-line history with no merge commits.
 
-### 4.0 Let GitHub Actions create the scenario
+### 4.0 GitHub Actions creates the scenario for you
 
-Go to **Actions → Exercise 4 · Create rebase scenario → Run workflow**. It creates branch
-`ex4/feature`, which is **10 commits behind** `main` and **9 commits ahead** of it:
+When you finished Exercise 3, the **Course progress** workflow created branch `ex4/feature`
+(about 1 minute), which is **10 commits behind** `main` and **9 commits ahead** of it. If the
+branch isn't there, go to **Actions → Exercise 4 · Create rebase scenario → Run workflow**.
 
 ![Before: ex4/feature branches off old main. After git rebase origin/main: the same commits are replayed on top of main with new hashes, followed by your commit.](assets/step4-rebase.svg)
 
@@ -28,7 +29,8 @@ git log --oneline --graph -15                           # one straight line
 ```
 
 Your 9 commits now sit on top of main's 10. Note that they have **new hashes**,
-because rebase rewrites commits. Now add one commit of your own:
+because rebase rewrites commits. Now add one commit of your own (run it in **Git Bash**, or add the
+line with your editor: Windows PowerShell's `echo >>` writes the file in the wrong encoding):
 
 ```bash
 echo "- Rebased onto main by <your-name>" >> exercise-4/feature-notes.md
